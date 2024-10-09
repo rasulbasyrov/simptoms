@@ -19,6 +19,11 @@ def get_possible_diagnoses(symptoms):
             possible_diagnoses.extend(symptoms_db[symptom])
     return list(set(possible_diagnoses))
 
+# Маршрут для корневого пути
+@app.route('/')
+def home():
+    return "Welcome to the Symptom Diagnosis API. Use /diagnose with POST method to get possible diagnoses."
+
 # Маршрут для приема POST-запросов с симптомами
 @app.route('/diagnose', methods=['POST'])
 def diagnose():
