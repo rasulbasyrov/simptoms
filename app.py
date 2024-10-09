@@ -1,38 +1,57 @@
+import numpy as np
 from flask import Flask, request, jsonify, render_template
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
 
-# База данных симптомов и диагнозов
-symptoms_db = {
-    "headache": ["migraine", "tension headache", "cluster headache"],
-    "fever": ["flu", "infection", "covid-19"],
-    "foot pain": ["arthritis", "sprain", "gout"],
-    "swollen foot": ["sprain", "venous thrombosis", "infection"],
-    "numbness in toes": ["nerve compression", "diabetes", "circulatory problems"]
-}
+# Пример данных для обучения (симптомы и диагнозы)
+X = np.array([[1, 0, 0],  # Headache
+              [0, 1, 0],  # Fever
+              [0, 0, 1],  # Foot pain
+              [1, 1, 0],  # Headache + Fever
+              [0, 1, 1],  # Fever + Foot pain
+              [1, 0, 1]]) # Headache + Foot pain
+y = np.array([0, 1, 2, 0, 1, 2])  # Диагнозы: 0 - Migraine, 1 - Flu, 2 - Arthritis
 
-# Функция для получения возможных диагнозов по симптомам
-def get_possible_diagnoses(symptoms):
-    possible_diagnoses = []
+# Разделение данных на обучающую и тестовую выборки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Обучение модели (RandomForest)
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# Словарь для отображения диагноза
+diagnosis_map = {0: "Migraine", 1: "Flu", 2: "Arthritis"}
+
+# Функция для преобразования симптомов в бинарные признаки
+def symptoms_to_features(symptoms):
+    feature_map = ["headache", "fever", "foot pain"]
+    features = np.zeros(len(feature_map))
     for symptom in symptoms:
-        if symptom in symptoms_db:
-            possible_diagnoses.extend(symptoms_db[symptom])
-    return list(set(possible_diagnoses))
+        if symptom in feature_map:
+            features[feature_map.index(symptom)] = 1
+    return features
 
-# Маршрут для главной страницы с чатом
 @app.route('/')
 def home():
     return render_template('chat.html')
 
-# Маршрут для приема POST-запросов с симптомами
+# Маршрут для диагностики
 @app.route('/diagnose', methods=['POST'])
 def diagnose():
     data = request.json
     symptoms = data.get('symptoms', '').split(',')
-    symptoms = [symptom.strip() for symptom in symptoms]
-    diagnoses = get_possible_diagnoses(symptoms)
-    return jsonify(diagnoses)
+    symptoms = [symptom.strip().lower() for symptom in symptoms]
+    
+    # Преобразование симптомов в признаки
+    features = symptoms_to_features(symptoms)
+    
+    # Предсказание диагноза
+    predicted = model.predict([features])[0]
+    diagnosis = diagnosis_map[predicted]
+    
+    return jsonify({"diagnosis": diagnosis})
 
-# Запуск приложения
 if __name__ == '__main__':
     app.run(debug=True)
