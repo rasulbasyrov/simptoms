@@ -1,7 +1,7 @@
 import os
 import openai
 from flask import Flask, request, jsonify, render_template
-from flask_babel import Babel, _
+from flask_babel import Babel, _, get_locale
 
 app = Flask(__name__)
 
@@ -12,14 +12,10 @@ babel = Babel(app)
 
 @babel.localeselector
 def get_locale():
+    # Выбираем язык из параметра запроса, либо используем английский по умолчанию
     return request.args.get('lang', 'en')
 
-# Добавляем функцию get_locale в контекст шаблонов
-@app.context_processor
-def inject_locale():
-    return dict(get_locale=get_locale)
-
-# Установим API-ключ OpenAI
+# Устанавливаем API-ключ OpenAI
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Маршрут для главной страницы с чатом
@@ -33,7 +29,7 @@ def diagnose():
     data = request.json
     symptoms = data.get('symptoms', '')
 
-    # Формирование запроса для OpenAI
+    # Формирование запроса для OpenAI на выбранном языке
     prompt = _("I have the following symptoms: {}. What might be the diagnosis?").format(symptoms)
 
     response = openai.Completion.create(
