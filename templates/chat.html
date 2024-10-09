@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Diagnosis Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 80vh;
+        }
+        .chat-box {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .message {
+            margin-bottom: 20px;
+        }
+        .user-message {
+            text-align: right;
+            color: #333;
+        }
+        .bot-message {
+            text-align: left;
+            color: #666;
+        }
+        .input-box {
+            display: flex;
+            padding: 10px;
+            background-color: #f4f4f9;
+        }
+        .input-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .input-box button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .input-box button:hover {
+            background-color: #0056b3;
+        }
+        .language-select {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background-color: #f4f4f9;
+        }
+        .language-select select {
+            padding: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <div class="message bot-message" id="welcome-message">Hello! Enter your symptoms separated by commas, and I will provide a diagnosis.</div>
+    </div>
+    <div class="input-box">
+        <input type="text" id="user-input" placeholder="Enter symptoms...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div class="language-select">
+        <label for="language-select">Language: </label>
+        <select id="language-select" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="tr">Türkçe</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    const messages = {
+        en: {
+            welcome: "Hello! Enter your symptoms separated by commas, and I will provide a diagnosis.",
+            placeholder: "Enter symptoms...",
+            send: "Send",
+            noDiagnosis: "No diagnoses found."
+        },
+        ru: {
+            welcome: "Привет! Введите симптомы через запятую, и я предложу возможные диагнозы.",
+            placeholder: "Введите симптомы...",
+            send: "Отправить",
+            noDiagnosis: "Диагнозы не найдены."
+        },
+        tr: {
+            welcome: "Merhaba! Belirtileri virgülle ayırarak girin, ve ben teşhis sağlayacağım.",
+            placeholder: "Belirtileri girin...",
+            send: "Gönder",
+            noDiagnosis: "Teşhis bulunamadı."
+        }
+    };
+
+    let currentLanguage = "en";
+
+    function changeLanguage() {
+        currentLanguage = document.getElementById("language-select").value;
+        document.getElementById("welcome-message").textContent = messages[currentLanguage].welcome;
+        document.getElementById("user-input").placeholder = messages[currentLanguage].placeholder;
+        document.querySelector(".input-box button").textContent = messages[currentLanguage].send;
+    }
+
+    function addMessage(content, type) {
+        const chatBox = document.getElementById('chat-box');
+        const message = document.createElement('div');
+        message.className = 'message ' + type + '-message';
+        message.textContent = content;
+        chatBox.appendChild(message);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('user-input');
+        const symptoms = input.value.trim();
+        if (symptoms) {
+            addMessage(symptoms, 'user');
+            fetch('/diagnose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ symptoms: symptoms })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const diagnosis = data.length ? data.join(', ') : messages[currentLanguage].noDiagnosis;
+                addMessage(diagnosis, 'bot');
+            });
+            input.value = '';
+        }
+    }
+</script>
+
+</body>
+</html>
