@@ -1,4 +1,8 @@
-# База данных симптомов и диагнозов в формате словаря
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# База данных симптомов и диагнозов
 symptoms_db = {
     "headache": ["migraine", "tension headache", "cluster headache"],
     "fever": ["flu", "infection", "covid-19"],
@@ -15,15 +19,14 @@ def get_possible_diagnoses(symptoms):
             possible_diagnoses.extend(symptoms_db[symptom])
     return list(set(possible_diagnoses))
 
-# Получаем ввод от пользователя
-user_input = input("Enter your symptoms separated by commas: ")
-user_symptoms = [symptom.strip().lower() for symptom in user_input.split(",")]
+# Маршрут для приема POST-запросов с симптомами
+@app.route('/diagnose', methods=['POST'])
+def diagnose():
+    data = request.json
+    symptoms = data.get("symptoms", [])
+    diagnoses = get_possible_diagnoses(symptoms)
+    return jsonify({"possible_diagnoses": diagnoses})
 
-# Получаем возможные диагнозы
-diagnoses = get_possible_diagnoses(user_symptoms)
-
-# Выводим результаты
-if diagnoses:
-    print(f"Possible diagnoses: {', '.join(diagnoses)}")
-else:
-    print("No diagnoses found for the given symptoms.")
+# Запуск приложения
+if __name__ == '__main__':
+    app.run(debug=True)
