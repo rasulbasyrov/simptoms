@@ -10,13 +10,17 @@ app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'ru', 'tr']
 babel = Babel(app)
 
-# Установим API-ключ OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
-# Определение языка пользователя
 @babel.localeselector
 def get_locale():
     return request.args.get('lang', 'en')
+
+# Добавляем функцию get_locale в контекст шаблонов
+@app.context_processor
+def inject_locale():
+    return dict(get_locale=get_locale)
+
+# Установим API-ключ OpenAI
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Маршрут для главной страницы с чатом
 @app.route('/')
