@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -19,18 +19,19 @@ def get_possible_diagnoses(symptoms):
             possible_diagnoses.extend(symptoms_db[symptom])
     return list(set(possible_diagnoses))
 
-# Маршрут для корневого пути
+# Маршрут для главной страницы с чатом
 @app.route('/')
 def home():
-    return "Welcome to the Symptom Diagnosis API. Use /diagnose with POST method to get possible diagnoses."
+    return render_template('chat.html')
 
 # Маршрут для приема POST-запросов с симптомами
 @app.route('/diagnose', methods=['POST'])
 def diagnose():
     data = request.json
-    symptoms = data.get("symptoms", [])
+    symptoms = data.get('symptoms', '').split(',')
+    symptoms = [symptom.strip() for symptom in symptoms]
     diagnoses = get_possible_diagnoses(symptoms)
-    return jsonify({"possible_diagnoses": diagnoses})
+    return jsonify(diagnoses)
 
 # Запуск приложения
 if __name__ == '__main__':
