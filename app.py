@@ -1,22 +1,39 @@
 import os
 import openai
-from flask import Flask, request, jsonify
-
-# Забираем ключ из переменной окружения
-openai.api_key = os.getenv('OPENAI_API_KEY')
+from flask import Flask, request, jsonify, render_template
+from flask_babel import Babel, _
 
 app = Flask(__name__)
 
+# Настройка Flask-Babel для мультиязычности
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'ru', 'tr']
+babel = Babel(app)
+
+# Установим API-ключ OpenAI
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Определение языка пользователя
+@babel.localeselector
+def get_locale():
+    return request.args.get('lang', 'en')
+
+# Маршрут для главной страницы с чатом
+@app.route('/')
+def home():
+    return render_template('chat.html')
+
+# Маршрут для диагностики симптомов
 @app.route('/diagnose', methods=['POST'])
 def diagnose():
     data = request.json
     symptoms = data.get('symptoms', '')
 
     # Формирование запроса для OpenAI
-    prompt = f"I have the following symptoms: {symptoms}. What might be the diagnosis?"
+    prompt = _("I have the following symptoms: {}. What might be the diagnosis?").format(symptoms)
 
     response = openai.Completion.create(
-        engine="text-davinci-003",  # Используй нужную модель OpenAI
+        engine="text-davinci-003",
         prompt=prompt,
         max_tokens=100
     )
