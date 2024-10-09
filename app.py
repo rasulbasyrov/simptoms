@@ -6,13 +6,16 @@ from sklearn.model_selection import train_test_split
 app = Flask(__name__)
 
 # Пример данных для обучения (симптомы и диагнозы)
+# Симптомы представлены как бинарные признаки (1 - симптом есть, 0 - симптом отсутствует)
 X = np.array([[1, 0, 0],  # Headache
               [0, 1, 0],  # Fever
               [0, 0, 1],  # Foot pain
               [1, 1, 0],  # Headache + Fever
               [0, 1, 1],  # Fever + Foot pain
               [1, 0, 1]]) # Headache + Foot pain
-y = np.array([0, 1, 2, 0, 1, 2])  # Диагнозы: 0 - Migraine, 1 - Flu, 2 - Arthritis
+
+# Диагнозы, соответствующие этим симптомам
+y = np.array([0, 1, 2, 0, 1, 2])  # 0 - Migraine, 1 - Flu, 2 - Arthritis
 
 # Разделение данных на обучающую и тестовую выборки
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
