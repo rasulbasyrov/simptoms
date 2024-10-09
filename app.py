@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 from sklearn.ensemble import RandomForestClassifier
@@ -13,8 +14,6 @@ X = np.array([[1, 0, 0],  # Headache
               [1, 1, 0],  # Headache + Fever
               [0, 1, 1],  # Fever + Foot pain
               [1, 0, 1]]) # Headache + Foot pain
-
-# Диагнозы, соответствующие этим симптомам
 y = np.array([0, 1, 2, 0, 1, 2])  # 0 - Migraine, 1 - Flu, 2 - Arthritis
 
 # Разделение данных на обучающую и тестовую выборки
@@ -57,4 +56,6 @@ def diagnose():
     return jsonify({"diagnosis": diagnosis})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Получаем порт из переменной окружения или используем 5000 по умолчанию
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
