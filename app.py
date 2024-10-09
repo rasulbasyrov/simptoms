@@ -1,61 +1,30 @@
 import os
-import numpy as np
-from flask import Flask, request, jsonify, render_template
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+import openai
+from flask import Flask, request, jsonify
+
+# Забираем ключ из переменной окружения
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 app = Flask(__name__)
 
-# Пример данных для обучения (симптомы и диагнозы)
-# Симптомы представлены как бинарные признаки (1 - симптом есть, 0 - симптом отсутствует)
-X = np.array([[1, 0, 0],  # Headache
-              [0, 1, 0],  # Fever
-              [0, 0, 1],  # Foot pain
-              [1, 1, 0],  # Headache + Fever
-              [0, 1, 1],  # Fever + Foot pain
-              [1, 0, 1]]) # Headache + Foot pain
-y = np.array([0, 1, 2, 0, 1, 2])  # 0 - Migraine, 1 - Flu, 2 - Arthritis
-
-# Разделение данных на обучающую и тестовую выборки
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Обучение модели (RandomForest)
-model = RandomForestClassifier()
-model.fit(X_train, y_train)
-
-# Словарь для отображения диагноза
-diagnosis_map = {0: "Migraine", 1: "Flu", 2: "Arthritis"}
-
-# Функция для преобразования симптомов в бинарные признаки
-def symptoms_to_features(symptoms):
-    feature_map = ["headache", "fever", "foot pain"]
-    features = np.zeros(len(feature_map))
-    for symptom in symptoms:
-        if symptom in feature_map:
-            features[feature_map.index(symptom)] = 1
-    return features
-
-@app.route('/')
-def home():
-    return render_template('chat.html')
-
-# Маршрут для диагностики
 @app.route('/diagnose', methods=['POST'])
 def diagnose():
     data = request.json
-    symptoms = data.get('symptoms', '').split(',')
-    symptoms = [symptom.strip().lower() for symptom in symptoms]
-    
-    # Преобразование симптомов в признаки
-    features = symptoms_to_features(symptoms)
-    
-    # Предсказание диагноза
-    predicted = model.predict([features])[0]
-    diagnosis = diagnosis_map[predicted]
-    
+    symptoms = data.get('symptoms', '')
+
+    # Формирование запроса для OpenAI
+    prompt = f"I have the following symptoms: {symptoms}. What might be the diagnosis?"
+
+    response = openai.Completion.create(
+        engine="text-davinci-003",  # Используй нужную модель OpenAI
+        prompt=prompt,
+        max_tokens=100
+    )
+
+    diagnosis = response.choices[0].text.strip()
+
     return jsonify({"diagnosis": diagnosis})
 
 if __name__ == '__main__':
-    # Получаем порт из переменной окружения или используем 5000 по умолчанию
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
