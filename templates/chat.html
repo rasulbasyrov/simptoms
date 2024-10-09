@@ -68,16 +68,6 @@
         .input-box button:hover {
             background-color: #0056b3;
         }
-        .language-select {
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-            background-color: #f4f4f9;
-        }
-        .language-select select {
-            padding: 5px;
-            font-size: 16px;
-        }
     </style>
 </head>
 <body>
@@ -90,47 +80,9 @@
         <input type="text" id="user-input" placeholder="Enter symptoms...">
         <button onclick="sendMessage()">Send</button>
     </div>
-    <div class="language-select">
-        <label for="language-select">Language: </label>
-        <select id="language-select" onchange="changeLanguage()">
-            <option value="en">English</option>
-            <option value="ru">Русский</option>
-            <option value="tr">Türkçe</option>
-        </select>
-    </div>
 </div>
 
 <script>
-    const messages = {
-        en: {
-            welcome: "Hello! Enter your symptoms separated by commas, and I will provide a diagnosis.",
-            placeholder: "Enter symptoms...",
-            send: "Send",
-            noDiagnosis: "No diagnoses found."
-        },
-        ru: {
-            welcome: "Привет! Введите симптомы через запятую, и я предложу возможные диагнозы.",
-            placeholder: "Введите симптомы...",
-            send: "Отправить",
-            noDiagnosis: "Диагнозы не найдены."
-        },
-        tr: {
-            welcome: "Merhaba! Belirtileri virgülle ayırarak girin, ve ben teşhis sağlayacağım.",
-            placeholder: "Belirtileri girin...",
-            send: "Gönder",
-            noDiagnosis: "Teşhis bulunamadı."
-        }
-    };
-
-    let currentLanguage = "en";
-
-    function changeLanguage() {
-        currentLanguage = document.getElementById("language-select").value;
-        document.getElementById("welcome-message").textContent = messages[currentLanguage].welcome;
-        document.getElementById("user-input").placeholder = messages[currentLanguage].placeholder;
-        document.querySelector(".input-box button").textContent = messages[currentLanguage].send;
-    }
-
     function addMessage(content, type) {
         const chatBox = document.getElementById('chat-box');
         const message = document.createElement('div');
@@ -154,7 +106,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                const diagnosis = data.length ? data.join(', ') : messages[currentLanguage].noDiagnosis;
+                const diagnosis = data.diagnosis;
                 addMessage(diagnosis, 'bot');
             });
             input.value = '';
